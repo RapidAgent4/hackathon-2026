@@ -93,7 +93,7 @@
         <h2 class="text-2xl font-bold text-rose-400 mb-2">🦊 Scanning Campus...</h2>
         <p class="text-slate-300 text-sm mb-4">Waiting for another student with matching interests to join...</p>
         <div class="animate-pulse text-xs text-slate-400 mb-6">Have another laptop or phone join with at least 1 shared interest!</div>
-        <button type="button" onclick="location.reload()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-slate-300 border border-slate-700 transition">
+        <button type="button" onclick="resetChat()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-slate-300 border border-slate-700 transition">
             ← Cancel & Go Back
         </button>
     </div>
@@ -113,7 +113,7 @@
                 <button type="button" onclick="skipTimer()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-slate-200 border border-slate-700 transition">
                     ⚡ Skip Timer
                 </button>
-                <button type="button" onclick="location.reload()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-slate-200 border border-slate-700 transition">
+                <button type="button" onclick="resetChat()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-slate-200 border border-slate-700 transition">
                     🔄 Reset
                 </button>
                 <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-right">
@@ -166,6 +166,7 @@
         let currentRoomId = null;
         let myAlias = "Red Fox 🦊";
         let currentMeetupSpot = "Saxbys Cafe @ Hancock Center — In 20 mins";
+        let previousRosterCount = 0;
 
         const MEETUP_SPOTS = {
             "Coffee ☕": "Saxbys Cafe @ Hancock Center — In 20 mins",
@@ -179,7 +180,7 @@
         };
 
         const ICEBREAKERS = {
-            "Coffee ☕": "☕ Marist Icebreaker: What's your go-to Saxbys order at Hancock?",
+            "Coffee ☕": "☕ Marist Icebreaker: What's your go-to Saxbys order?",
             "Boba 🧋": "🧋 Marist Icebreaker: Fruit tea or brown sugar milk tea—and tapioca pearls or popping boba?",
             "Gym 🏋️": "🏋️ Marist Icebreaker: Push day, pull day, or leg day at McCann today?",
             "Anime ⚔️": "⚔️ Marist Icebreaker: Top 3 anime of all time—and sub or dub?",
@@ -225,6 +226,11 @@
         }
 
         function addChatMsg(sender, text, isMe) {
+            // Render system alerts cleanly if someone leaves the room
+            if (sender === "System") {
+                addSystemMsg(text);
+                return;
+            }
             const box = document.getElementById("messages");
             const style = isMe ? "border-l-2 border-red-500 bg-slate-950" : "bg-slate-800/80";
             const color = isMe ? "text-rose-400" : "text-amber-300";
@@ -249,6 +255,39 @@
                 interests: interests,
                 duration: duration
             });
+        }
+
+        function resetChat() {
+            // 1. Tell the Flask backend to remove this user from the room or waiting queue
+            socket.emit("reset_chat");
+
+            // 2. Stop the countdown timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // 3. Reset client state
+            currentRoomId = null;
+            previousRosterCount = 0;
+
+            // 4. Clear chat history, roster, and reveal banner for the next match
+            document.getElementById("messages").innerHTML = "";
+            document.getElementById("room-roster").innerHTML = `<span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mr-1">In Pack:</span>`;
+            document.getElementById("revealed-list").innerHTML = "";
+            document.getElementById("reveal-banner").classList.add("hidden");
+            document.getElementById("action-buttons").classList.remove("hidden");
+            document.getElementById("chat-input").value = "";
+
+            const timerEl = document.getElementById("timer");
+            timerEl.classList.remove("text-emerald-400");
+            timerEl.classList.add("text-amber-400");
+            timerEl.innerText = "00:45";
+
+            // 5. Return to the Setup Card
+            document.getElementById("chat-card").classList.add("hidden");
+            document.getElementById("waiting-card").classList.add("hidden");
+            document.getElementById("setup-card").classList.remove("hidden");
         }
 
         socket.on("match_found", (data) => {
@@ -281,9 +320,10 @@
                 addSystemMsg(`Pack formed! ${data.roster.length} Marist students matched.`);
                 document.getElementById("messages").innerHTML += `<div class="bg-red-950/70 border border-red-500/40 text-rose-200 p-3 rounded-xl text-xs font-medium my-2">${icebreaker}</div>`;
                 startCountdown(data.duration_seconds);
-            } else {
+            } else if (data.roster.length > previousRosterCount) {
                 addSystemMsg(`A new student joined the pack! (${data.roster.length}/${data.max_capacity})`);
             }
+            previousRosterCount = data.roster.length;
         });
 
         function sendChat() {
