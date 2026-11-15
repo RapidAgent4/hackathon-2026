@@ -70,7 +70,7 @@ if __name__ == "__main__":
         User("id_2", "Bob", "Design Major", ["Coffee", "Music", "Art"], mode="group"),
         User("id_3", "Charlie", "Math Major", ["Coding", "Gaming", "Fitness"], mode="group"),
         User("id_4", "Dana", "Bio Major", ["Hiking", "Cooking"], mode="group"),  # No overlap!
-        User("id_5", "Eli", "Music Major", ["Gaming", "Music"], mode="1on1"),    # Different mode!
+        User("id_5", "Eli", "Music Major", ["Gaming", "Music"], mode="group"),    # Different mode!
     ]
 
     # Create a new incoming user looking for a group

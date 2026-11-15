@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoxHunt - Marist Student Meetups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <!-- ================================================================= -->
+    <!-- SCREEN 1: SETUP CARD (Lobby)                                      -->
+    <!-- ================================================================= -->
+    <div id="setup-card" class="bg-slate-900 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-red-500/30">
+
+        <!-- APP TITLE & MARIST BADGE -->
+        <div class="flex items-center justify-between mb-1">
+            <h1 class="text-3xl font-extrabold bg-gradient-to-r from-red-500 via-rose-400 to-amber-300 bg-clip-text text-transparent">
+                🦊 FoxHunt
+            </h1>
+            <span class="text-xs bg-red-500/20 text-red-300 border border-red-500/40 px-2.5 py-1 rounded-full font-semibold">
+                🎓 Marist .edu Verified
+            </span>
+        </div>
+        <p class="text-slate-400 text-sm mb-6">
+            Marist Student Meetups! Chat anonymously by shared interests, then reveal who you are or meet up on campus.
+        </p>
+
+        <!-- 1. HIDDEN IDENTITY INPUTS -->
+        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-1">
+            1. Your Hidden Identity (Locked until timer ends)
+        </label>
+        <input id="real_name" placeholder="Your Real Name & Year (e.g., Alex Rivera '27)" class="w-full p-3 rounded-lg bg-slate-950 border border-slate-700 mb-3 text-sm text-white focus:outline-none focus:border-red-500"/>
+        <input id="handle" placeholder="Instagram / Snapchat (e.g., @alex.marist)" class="w-full p-3 rounded-lg bg-slate-950 border border-slate-700 mb-5 text-sm text-white focus:outline-none focus:border-red-500"/>
+
+        <!-- 2. GROUP VS ONE-ON-ONE SETTING (Default: Groups of 5 Max) -->
+        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">
+            2. Chat Mode Setting (Default: Groups of 5 Max)
+        </label>
+        <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-950 p-1.5 rounded-xl border border-slate-700">
+            <button type="button" id="btn-group" onclick="setMode('group')" class="py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white transition">
+                👥 Group (Max 5)
+            </button>
+            <button type="button" id="btn-1on1" onclick="setMode('one_on_one')" class="py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition">
+                👤 One-on-One
+            </button>
+        </div>
+
+        <!-- 3. TIMER DURATION SELECTOR -->
+        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">
+            3. Chat Timer Before Reveal
+        </label>
+        <select id="timer-select" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 mb-5 text-sm text-white focus:outline-none focus:border-red-500">
+            <option value="45" selected>⚡ 45 Seconds (Hackathon Live Demo)</option>
+            <option value="300">⏱️ 5 Minutes (Quick Campus Mixer)</option>
+            <option value="900">☕ 15 Minutes (Standard Hangout)</option>
+        </select>
+
+        <!-- 4. INTEREST BUTTONS -->
+        <label class="block text-xs uppercase tracking-wider text-slate-400 mb-2">
+            4. Pick Your Related Interests
+        </label>
+        <div id="interests-box" class="flex flex-wrap gap-2 mb-3">
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-red-600 text-white transition">Coffee ☕</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Boba 🧋</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Gym 🏋️</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Anime ⚔️</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Gaming 🎮</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Hiking 🥾</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Coding 💻</button>
+            <button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 transition">Music 🎵</button>
+        </div>
+
+        <!-- CUSTOM INTEREST INPUT -->
+        <div class="flex gap-2 mb-6">
+            <input id="custom-interest" onkeydown="if(event.key==='Enter') addCustomInterest()" placeholder="+ Add custom interest (e.g., Valorant, Thrifting)" class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-red-500"/>
+            <button type="button" onclick="addCustomInterest()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold text-rose-400 border border-slate-700 transition">
+                + Add
+            </button>
+        </div>
+
+        <!-- START MATCH BUTTON -->
+        <button type="button" onclick="startMatch()" class="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-500 rounded-xl font-bold text-white hover:opacity-90 transition shadow-lg">
+            Start FoxHunt Anonymous Chat →
+        </button>
+
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SCREEN 2: WAITING ROOM (Hidden until "Start" is clicked)          -->
+    <!-- ================================================================= -->
+    <div id="waiting-card" class="hidden bg-slate-900 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-red-500/30 text-center">
+        <h2 class="text-2xl font-bold text-rose-400 mb-2">🦊 Scanning Campus...</h2>
+        <p class="text-slate-300 text-sm mb-4">Waiting for another student with matching interests to join...</p>
+        <div class="animate-pulse text-xs text-slate-400 mb-6">Have another laptop or phone join with at least 1 shared interest!</div>
+        <button type="button" onclick="location.reload()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-slate-300 border border-slate-700 transition">
+            ← Cancel & Go Back
+        </button>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SCREEN 3: LIVE CHAT ROOM (Hidden until matched)                   -->
+    <!-- ================================================================= -->
+    <div id="chat-card" class="hidden bg-slate-900 p-6 rounded-2xl shadow-2xl w-full max-w-lg border border-red-500/30 flex flex-col h-[680px]">
+
+        <!-- TOP HEADER & TIMER -->
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-3">
+            <div>
+                <span id="my-alias" class="text-sm font-bold text-rose-400">You are: Red Fox 🦊</span>
+                <p id="shared-tags" class="text-xs text-slate-400">Matching Marist students...</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="skipTimer()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-slate-200 border border-slate-700 transition">
+                    ⚡ Skip Timer
+                </button>
+                <button type="button" onclick="location.reload()" class="text-xs bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg text-slate-200 border border-slate-700 transition">
+                    🔄 Reset
+                </button>
+                <div class="bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-right">
+                    <span class="text-[10px] uppercase text-slate-400 block">Reveal Timer</span>
+                    <span id="timer" class="text-lg font-mono font-bold text-amber-400">00:45</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIVE ROOM ROSTER BAR -->
+        <div id="room-roster" class="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 mb-3 overflow-x-auto">
+            <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mr-1">In Pack:</span>
+        </div>
+
+        <!-- CHAT MESSAGES -->
+        <div id="messages" class="flex-1 overflow-y-auto space-y-2.5 mb-3 pr-1 text-sm"></div>
+
+        <!-- REVEAL / MEETUP POPUP (Unlocks at 00:00) -->
+        <div id="reveal-banner" class="hidden bg-slate-950 border border-red-500/60 p-4 rounded-xl mb-3 max-h-64 overflow-y-auto shadow-xl">
+            <p class="font-bold text-sm text-rose-300 mb-2">⏰ Time is up! Ready to reveal or meet up on campus?</p>
+            <div class="grid grid-cols-2 gap-2 mb-2" id="action-buttons">
+                <button type="button" onclick="triggerReveal('reveal')" class="py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs transition">
+                    ✨ Reveal Who We Are
+                </button>
+                <button type="button" onclick="triggerReveal('meetup')" class="py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-lg text-xs transition">
+                    📍 Set Up Campus Meetup
+                </button>
+            </div>
+            <div id="revealed-list" class="mt-2 space-y-1.5 text-xs text-emerald-300"></div>
+        </div>
+
+        <!-- MESSAGE INPUT BAR -->
+        <div class="flex gap-2">
+            <input id="chat-input" onkeydown="if(event.key==='Enter') sendChat()" placeholder="Chat anonymously with your pack..." class="flex-1 p-3 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-red-500"/>
+            <button type="button" onclick="sendChat()" class="px-5 bg-red-600 hover:bg-red-500 rounded-xl font-bold text-sm transition">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- LIVE MULTI-DEVICE WEBSOCKET CONTROLLER                            -->
+    <!-- ================================================================= -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let selectedMode = "group";
+        let secondsLeft = 45;
+        let timerInterval = null;
+        let currentRoomId = null;
+        let myAlias = "Red Fox 🦊";
+        let currentMeetupSpot = "Saxbys Cafe @ Hancock Center — In 20 mins";
+
+        const MEETUP_SPOTS = {
+            "Coffee ☕": "Saxbys Cafe @ Hancock Center — In 20 mins",
+            "Boba 🧋": "Boba Run / Murray Student Center Patio — Today at 4:30 PM",
+            "Gym 🏋️": "McCann Recreation Center Weight Room — Today at 5:30 PM",
+            "Anime ⚔️": "Byrne House Lounge / Watch Party — Tonight at 8:00 PM",
+            "Gaming 🎮": "Hancock Center Esports & Gaming Lounge — Tonight at 7:00 PM",
+            "Hiking 🥾": "Longview Park (Hudson River Lawn) — Tomorrow at 4:00 PM",
+            "Coding 💻": "Hancock Center 2nd Floor Collaborative Study — In 15 mins",
+            "Music 🎵": "Student Center Cabaret Stage — Tonight at 6:30 PM"
+        };
+
+        const ICEBREAKERS = {
+            "Coffee ☕": "☕ Marist Icebreaker: What's your go-to Saxbys order at Hancock?",
+            "Boba 🧋": "🧋 Marist Icebreaker: Fruit tea or brown sugar milk tea—and tapioca pearls or popping boba?",
+            "Gym 🏋️": "🏋️ Marist Icebreaker: Push day, pull day, or leg day at McCann today?",
+            "Anime ⚔️": "⚔️ Marist Icebreaker: Top 3 anime of all time—and sub or dub?",
+            "Gaming 🎮": "🎮 Marist Icebreaker: What game have you sunk the most hours into this semester?",
+            "Hiking 🥾": "🥾 Marist Icebreaker: Sunset walk down by the Hudson River or hiking Minnewaska?",
+            "Coding 💻": "💻 Marist Icebreaker: Favorite language to build in at Hancock, and how's the hackathon going?",
+            "Music 🎵": "🎵 Marist Icebreaker: Who's at the top of your Spotify On Repeat right now?"
+        };
+
+        function setMode(mode) {
+            selectedMode = mode;
+            document.getElementById("btn-group").className = mode === "group"
+                ? "py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white transition"
+                : "py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition";
+            document.getElementById("btn-1on1").className = mode === "one_on_one"
+                ? "py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white transition"
+                : "py-2.5 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition";
+        }
+
+        function toggleInterest(btn) {
+            if (btn.classList.contains("bg-red-600")) {
+                btn.classList.remove("bg-red-600", "text-white");
+                btn.classList.add("bg-slate-800", "text-slate-300");
+            } else {
+                btn.classList.remove("bg-slate-800", "text-slate-300");
+                btn.classList.add("bg-red-600", "text-white");
+            }
+        }
+
+        function addCustomInterest() {
+            const input = document.getElementById("custom-interest");
+            const val = input.value.trim();
+            if (!val) return;
+            document.getElementById("interests-box").innerHTML +=
+                `<button type="button" onclick="toggleInterest(this)" class="interest-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-red-600 text-white transition">${val} ✨</button>`;
+            input.value = "";
+        }
+
+        function addSystemMsg(text) {
+            const box = document.getElementById("messages");
+            box.innerHTML += `<div class="text-xs text-center text-slate-400 my-1">${text}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function addChatMsg(sender, text, isMe) {
+            const box = document.getElementById("messages");
+            const style = isMe ? "border-l-2 border-red-500 bg-slate-950" : "bg-slate-800/80";
+            const color = isMe ? "text-rose-400" : "text-amber-300";
+            box.innerHTML += `<div class="${style} p-2.5 rounded-lg"><strong class="${color}">${sender}:</strong> ${text}</div>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function startMatch() {
+            const realName = document.getElementById("real_name").value.trim() || "Alex Rivera '27";
+            const handle = document.getElementById("handle").value.trim() || "@alex.marist";
+            const duration = parseInt(document.getElementById("timer-select").value) || 45;
+            const selectedBtns = Array.from(document.querySelectorAll(".interest-pill.bg-red-600"));
+            const interests = selectedBtns.length > 0 ? selectedBtns.map(b => b.innerText) : ["Coffee ☕"];
+
+            document.getElementById("setup-card").classList.add("hidden");
+            document.getElementById("waiting-card").classList.remove("hidden");
+
+            socket.emit("join_queue", {
+                real_name: realName,
+                handle: handle,
+                mode: selectedMode,
+                interests: interests,
+                duration: duration
+            });
+        }
+
+        socket.on("match_found", (data) => {
+            const isFirstJoin = (currentRoomId === null);
+            currentRoomId = data.room_id;
+            myAlias = data.my_alias;
+
+            document.getElementById("waiting-card").classList.add("hidden");
+            document.getElementById("chat-card").classList.remove("hidden");
+
+            document.getElementById("my-alias").innerText = `You are: ${myAlias}`;
+            const topInterest = data.common_interests[0] || "Campus Hangout";
+            currentMeetupSpot = MEETUP_SPOTS[topInterest] || "Saxbys @ Hancock Center — Today at 4:30 PM";
+
+            document.getElementById("shared-tags").innerText =
+                `Matched on: ${data.common_interests.join(", ")} • ${data.mode === "group" ? "Group Pack (Max 5)" : "One-on-One"}`;
+
+            const rosterBox = document.getElementById("room-roster");
+            rosterBox.innerHTML = `<span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mr-1">In Pack (${data.roster.length}/${data.max_capacity}):</span>`;
+            data.roster.forEach(alias => {
+                if (alias === myAlias) {
+                    rosterBox.innerHTML += `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30 whitespace-nowrap">${alias} (You)</span>`;
+                } else {
+                    rosterBox.innerHTML += `<span class="px-2.5 py-1 rounded-full text-xs bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">${alias}</span>`;
+                }
+            });
+
+            if (isFirstJoin) {
+                const icebreaker = ICEBREAKERS[topInterest] || `🦊 Marist Icebreaker: What got you into ${topInterest}, and what's your favorite spot on campus?`;
+                addSystemMsg(`Pack formed! ${data.roster.length} Marist students matched.`);
+                document.getElementById("messages").innerHTML += `<div class="bg-red-950/70 border border-red-500/40 text-rose-200 p-3 rounded-xl text-xs font-medium my-2">${icebreaker}</div>`;
+                startCountdown(data.duration_seconds);
+            } else {
+                addSystemMsg(`A new student joined the pack! (${data.roster.length}/${data.max_capacity})`);
+            }
+        });
+
+        function sendChat() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.trim();
+            if (!text || !currentRoomId) return;
+
+            addChatMsg(`${myAlias} (You)`, text, true);
+            socket.emit("send_message", { room_id: currentRoomId, text: text });
+            input.value = "";
+        }
+
+        socket.on("new_message", (data) => {
+            addChatMsg(data.sender, data.text, false);
+        });
+
+        function startCountdown(seconds) {
+            if (timerInterval) clearInterval(timerInterval);
+            secondsLeft = seconds;
+            updateClock();
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                updateClock();
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    const timerEl = document.getElementById("timer");
+                    timerEl.innerText = "00:00";
+                    timerEl.classList.replace("text-amber-400", "text-emerald-400");
+                    document.getElementById("reveal-banner").classList.remove("hidden");
+                }
+            }, 1000);
+        }
+
+        function updateClock() {
+            const s = Math.max(0, secondsLeft);
+            const mins = Math.floor(s / 60);
+            const secs = s % 60;
+            document.getElementById("timer").innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function skipTimer() {
+            secondsLeft = 1;
+        }
+
+        function triggerReveal(choice) {
+            socket.emit("trigger_reveal", { room_id: currentRoomId, choice: choice });
+        }
+
+        socket.on("reveal_all", (data) => {
+            document.getElementById("reveal-banner").classList.remove("hidden");
+            document.getElementById("action-buttons").classList.add("hidden");
+            const list = document.getElementById("revealed-list");
+            list.innerHTML = "";
+
+            if (data.choice === "meetup") {
+                list.innerHTML += `
+                    <div class="bg-slate-900 border border-amber-400/50 p-3 rounded-xl text-amber-200 mb-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <b>📍 Marist Campus Meetup Locked In:</b>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40">✔ Safe Campus Zone</span>
+                        </div>
+                        <p class="text-white font-semibold mb-2">${currentMeetupSpot}</p>
+                        <iframe class="w-full h-28 rounded-lg border border-slate-700" loading="lazy"
+                            src="https://www.openstreetmap.org/export/embed.html?bbox=-73.9425%2C41.7185%2C-73.9315%2C41.7265&layer=mapnik">
+                        </iframe>
+                    </div>`;
+            }
+
+            data.profiles.forEach(p => {
+                list.innerHTML += `<div class="bg-slate-900 p-2 rounded border border-emerald-500/40">✅ <b>${p.alias}</b> is <b>${p.real_name}</b> (<span class="text-rose-300">${p.handle}</span>)</div>`;
+            });
+        });
+    </script>
+
+</body>
+</html>
